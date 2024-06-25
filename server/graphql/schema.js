@@ -17,14 +17,14 @@ const BookType = new GraphQLObjectType({
       book: {
         type: BookType,
         args: { id: { type: GraphQLID } },
-        async resolve(parent, args) {
-          return await Book.findById(args.id);
+        resolve(parent, args) {
+          return Book.findById(args.id);
         },
       },
       books: {
         type: new GraphQLList(BookType),
-        async resolve(parent, args) {
-          return await Book.find({});
+        resolve(parent, args) {
+          return Book.find({});
         },
       },
     },
@@ -40,38 +40,24 @@ const BookType = new GraphQLObjectType({
           books: { type: GraphQLString },
           copies: { type: GraphQLString },
         },
-        async resolve(parent, args) {
+        resolve(parent, args) {
           let book = new Book({
             author: args.author,
             books: args.books,
             copies: args.copies,
           });
-          return await book.save();
+          return book.save();
         },
+      },
+      removeBook: {
+        type: BookType,
+        args: {
+          id: { type: GraphQLID }
         },
-        updateBook: {
-          type: BookType,
-          args: {
-            id: { type: GraphQLID },
-            books: { type: GraphQLString },
-            copies: { type: GraphQLString },
-          },
-          async resolve(parent, args){
-            return await Book.updateOne(
-              { _id: args.id },
-              { $set: { books: args.books, copies: args.copies } }
-            ,)
-          }
-        },
-        deleteBook: {
-          type: BookType,
-          args: { 
-            id: { type: GraphQLID }
-          },
-          async resolve(parent, args){
-            return await Book.deleteOne({_id: args.id});
-          }
+        resolve(parent,args){
+          return Book.deleteOne({ _id: args.id })
         }
+      }
     },
   })
 

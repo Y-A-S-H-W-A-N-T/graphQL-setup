@@ -1,31 +1,40 @@
-const express = require('express');
-const { graphqlHTTP } = require('express-graphql');
-const mongoose = require('mongoose');
-const schema = require('./graphql/schema');
-const bodyParser = require('body-parser');
-const cors = require('cors');
-
-const app = express()
-app.use(cors({
-  origin: 'http://localhost:3000',
-}));
+import express from 'express'
+import mongoose from 'mongoose';
+import bodyParser from 'body-parser';
+import cors from 'cors'
+import { ApolloServer } from 'apollo-server-express';
+import typeDefs from './typeDefs.js';
+import resolvers from './resolvers.js';
 
 
-// Connect to MongoDB
-const MONGO_URL = 'mongodb+srv://yashwant:yashwant@cluster0.n8lyem8.mongodb.net/Test?retryWrites=true&w=majority&appName=Cluster0'
-mongoose.connect(MONGO_URL).then(()=>console.log("DATABASE CONNECTED")).catch((err)=>console.log(err))
-mongoose.connection.once('open', () => {
-  console.log('Connected to MongoDB');
-})
+async function startServer(){
+  const app = express()
+  const PORT = 8000
+  
+  app.use(bodyParser.json());
 
-// Middleware for GraphQL
-app.use('/graphql', graphqlHTTP({
-  schema,
-  graphiql: true,
-}))
+  app.use(cors());
 
-app.use(bodyParser.json());
+  const apolloserver = new ApolloServer({typeDefs, resolvers})
 
-app.listen(8000,async()=>{
+  await apolloserver.start()
+
+  apolloserver.applyMiddleware({app, path: '/graphql'})
+
+  app.use('/',(req,res)=>{
+    res.send("grapgQL Server Started")
+  })
+
+  app.listen(PORT,async()=>{
     console.log("server running")
-})
+  })
+
+  // Connect to MongoDB
+  const MONGO_URL = 'mongodb+srv://yashwant:yashwant@cluster0.n8lyem8.mongodb.net/Test?retryWrites=true&w=majority&appName=Cluster0'
+  mongoose.connect(MONGO_URL).then(()=>console.log("DATABASE CONNECTED"))
+  mongoose.connection.once('open', () => {
+    console.log('Connected to MongoDB');
+  });
+}
+
+startServer()
